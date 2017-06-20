@@ -1,0 +1,35 @@
+@charset "UTF-8";
+svg{
+	font-size: 12px; font-weight: normal;font-family: "微软雅黑";
+	.x-axis,.y-axis{
+		line{stroke: rgba(255, 255, 255, 0.4);}
+		text{fill: rgba(255, 255, 255, 0.4);}
+		.domain{stroke:rgba(255, 255, 255, 0.4); fill:none;};
+		.grid-line{stroke: rgba(255, 255, 255, 0.2);}
+	}
+	.axisNone{
+		.tick line:first-of-type{display:none;}
+		path.domain{display:none;};
+	}
+	.legends{
+		text{fill:rgba(255,255,255,1);}
+	}
+	.xUnit{
+		fill:rgba(255,255,255,.4);
+	}
+	
+	.tick-start{
+		.x-axis .tick:first-of-type,.x-axis .tick:last-of-type{
+			line{display:none;}
+		}
+	}
+	.x-axis.segment{
+		.tick:last-of-type line{
+			display:none;
+		}
+	}
+	.markLine{
+		fill : rgba(255,255,255,.2);
+		stroke-width : 1;
+	}
+}

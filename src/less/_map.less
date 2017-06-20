@@ -1,0 +1,28 @@
+.map {
+	.part {fill:#172c4b; stroke:#546f86; stroke-opacity:1;}
+	/* .part.hover{fill:#2e5898;} */
+	.over-layer .part { fill-opacity:0; stroke-opacity:0;}
+	.bound {stroke-width:5px; fill:none;}
+	
+	.province {stroke:#d556f8;}
+	.region {stroke:#27a2ef;}
+	.city {stroke:#ffa000;stroke-width:3px;}
+	.kernel{stroke:#f93636;stroke-width:3px;}
+	
+	text{fill:#96ffd8;font-size:24px;text-anchor:middle;font-style:italic;}
+
+	.column.hover text {opacity:1;}
+	.alarm.hover image:not(:last-child),.alarm.focused image:not(:last-child){opacity:0}
+	.alarm.hover image:last-child,.alarm.focused image:last-child{
+		opacity:1;
+	}
+
+}
+.cmap {
+	.part{ stroke:#ccc;}
+	.p26{ fill: #f93636;}
+	.bound {stroke-width:3px; fill:none;}
+	.over-layer .part{ fill-opacity:0; stroke-opacity:0;}
+
+	text{fill :white; font-size:12px;}
+}

@@ -1,0 +1,124 @@
+<script>
+var nsGlobal = IXW.ns("Global");
+var nsPanel = IXW.ns("Panel");
+var nsLib = IXW.ns("Lib");
+
+</script>
+<tpl id="panelWrapper">
+	<div class="pannel {clz}" data-pannel="{name}">
+		<div class="title">
+			<span class="tabs"><tpl id="tabs">
+				<a data-href="$side.tab.click" class="{focused}" data-key="{value}">{name}</a>
+			</tpl></span>
+			<a data-href="$side.action.click" class="icon-action" data-key="{name}"></a>
+		</div>
+		<div class="content clearfix">{html}</div>
+	</div>
+</tpl>
+<script>
+var panelHT = {};
+IXW.Actions.configActions([["side.tab.click", function(params, el){
+	if ($XH.hasClass(el, "focused"))
+		return;
+	var panelEl = $XH.ancestor(el, "pannel");
+	var panelName = $XD.dataAttr(panelEl, "pannel");
+	var panel = panelHT[panelName];
+	if (!panel)
+		return; 
+	
+	panel.switchTo(params.key);
+	$XH.removeClass($XH.first(el.parentNode, "focused"), "focused");
+	$XH.addClass(el, "focused");
+
+}], ["side.action.click", function(params, el){
+	var bodyEl = document.body;
+	var isMasked = $XH.hasClass(bodyEl, "masked");
+	$XH[isMasked ? "removeClass" : "addClass"](bodyEl, "masked");
+
+}]]);
+
+/*function getStyles(rect){
+	var styles = [];
+	IX.iterate(["height"], function(name, idx){
+		var attr = rect[idx];
+		if (attr !== null) 
+			styles.push(name + ":" + attr +"px");
+	});
+	return styles.join(";");
+}*/
+/* panelClz : return instance {
+		getTabs(),
+		getHTML(),
+		switchTab(tabName)
+		refresh(panelData)
+	}
+ */
+function PanelWrapper(container, panelClz, cfg){
+	var panelName = cfg.name;
+	var dataKey = $XP(cfg, "dataKey", panelName);
+	var panel = new panelClz(container, cfg);
+	return {
+		getHTML: function(){
+			return t_panelWrapper.renderData("", {
+				clz: panelName,
+				name: panelName,
+				tabs: panel.getTabs(),
+				html: panel ? panel.getHTML() : "",
+				/*styles: cfg.styles ? getStyles(cfg.styles) : ""*/
+			});
+		},
+		switchTo: function(value){
+			if (panel)
+				panel.switchTab(value); 	
+		},
+		refresh: function(data){
+			if (panel)
+				panel.refresh(data && data[panelName.camelize()]); 	
+		}
+	};
+}
+
+function initPanelGroups(container, panelDefs){
+	var panels = IX.map(panelDefs, function(cfg){
+		var panelName = cfg.name;
+		var clzName = panelName.capitalize().camelize();
+		var panel = new PanelWrapper(container, nsPanel[clzName], cfg);
+		panelHT[panelName] = panel;
+		return IX.inherit(panel, { clz:panelName });
+	});
+
+	container.innerHTML = IX.map(panels, function(panel){
+		return panel.getHTML();
+	}).join("");
+	return panels;
+}
+
+var PanelDefs = {
+	left: [
+		{name: "device-statistic", dataKey: "counts", Class: "Test"},
+		{name: "device-list", dataKey: "category", Class: "Test"},
+		{name: "device-rank", datakey: "rank", Class: "Test"}
+	],
+	right: [
+		{name: "traffic-statistic", Class: "Test"},
+		{name: "traffic-outside", Class: "Test"},
+		{name: "traffic-data", Class: "Test "}
+	]
+};
+
+var nsModule = IXW.ns("Sidepage");
+nsModule.init = function(pageCfg, pageParams, cbFn){
+	var leftEl = $X('lside'),rightEl = $X('rside');
+	var leftPanels = initPanelGroups(leftEl,  PanelDefs.left);
+	var rightPanels = initPanelGroups(rightEl,  PanelDefs.right);
+	
+	nsGlobal.serviceCaller("getDeviceInfo", {}, function(data){
+		IX.iterate(leftPanels, function(panel){
+			panel.refresh(data);
+		});
+	});
+	IX.iterate(rightPanels, function(panel){
+		panel.refresh();
+	});
+};
+</script>

@@ -1,0 +1,43 @@
+Mon Jun 19 2017 09:55:44 GMT+0800 (CST)
+[DISCARD ]../src/lib/less.min.js
+[ixw.js  ]../src/lib/ix.js
+[ixw.js  ]../src/lib/jquery-2.1.1.js
+[ixw.js  ]../src/bootstrap/js/bootstrap.js
+[ixw.js  ]../src/lib/ixw.js
+[ixw.js  ]../src/lib/ixwui.js
+[ixw.js  ]../src/lib/ixwext.js
+[ixw.js  ]../src/lib/ext.js
+[ixw.js  ]../src/lib/d3.js
+[ixw.js  ]../src/lib/topojson.js
+[ixw.js  ]../src/libd3/defs.js
+[ixw.js  ]../src/libd3/wrapper.js
+[ixw.js  ]../src/libd3/bubbles.js
+[ixw.js  ]../src/libd3/frustums.js
+[ixw.js  ]../src/libd3/imgFrustums.js
+[ixw.js  ]../src/libd3/map.js
+[ixw.js  ]../sim/testSide.js
+[ixw.js  ]../sim/testHome.js
+[DISCARD ]global.js
+[s3lyg.js]../src/mapdata/map.js
+[s3lyg.js]../src/ixw/lib/transit.js
+[s3lyg.js]../src/ixw/_home/map.js
+[s3lyg.js]../src/ixw/_side/map.js
+[s3lyg.js]../src/ixw/lib/tools.js
+[s3lyg.js]../src/ixw/d3ext/charts.js
+[s3lyg.js]../src/ixw/d3ext/pieChart.js
+[s3lyg.js]../src/ixw/lib/trafficDataGraph_dataHandler.js
+[s3lyg.js]../src/ixw/lib/trafficDataGraph.js
+[s3lyg.js]../src/ixw/lib/tooltips.js.html
+[s3lyg.js]../src/ixw/_side/deviceStatistic.js.html
+[s3lyg.js]../src/ixw/_side/deviceList.js.html
+[s3lyg.js]../src/ixw/_side/deviceRank.js.html
+[s3lyg.js]../src/ixw/_side/trafficData.js.html
+[s3lyg.js]../src/ixw/_side/trafficOutside.js.html
+[s3lyg.js]../src/ixw/_side/trafficStatistic.js.html
+[s3lyg.js]../src/ixw/lib/imgSlide.js.html
+[s3lyg.js]../src/ixw/_side/index.js.html
+[s3lyg.js]../src/ixw/_home/index.js.html
+[s3lyg.js]../src/ixw/index.js.html
+[DISCARD ]../src/lib/ets.js
+concat to ixw.js: 17 files
+concat to s3lyg.js: 20 files

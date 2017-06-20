@@ -1,0 +1,245 @@
+<script>
+var nsPanel = IXW.ns("Panel");
+var nsGlobal = IXW.ns("Global");
+var getCubeImageUrl = nsGlobal.getCubeImageUrl;
+var nsD3 = IXW.LibD3;
+var nsLib = IXW.ns("Lib");
+
+function PolygonSchemes(base,hover){
+	var PolygonSchemeNamePrefix = "image-cube4";
+	var CubePolygon = [ //缺省立方体的底面顶点坐标
+		[0,11], // point 0
+		[18,0], // point 1
+		[40,13],// point 2
+		[22, 24]// point 3
+	];
+	var BaseRect = [40, 24];//底面图片宽高
+	var SideRect = [23, 200]; //侧边图片宽高
+	var scheme = {
+		"f-top" : base.top,
+		"f-side" : base.side,
+		"f-side-0-1" : "",
+		"f-side-1-2" : "",
+		"f-bot" : base.bot
+	};
+	var hoverScheme = {
+		"f-top" : hover.top,
+		"f-side" : hover.side,
+		"f-side-0-1" : "",
+		"f-side-1-2" : "",
+		"f-bot" : hover.bot
+	};
+
+	function getSchemeByName(_schemes, name){
+		var arr = name.split("-"), _name = name;
+		while(arr.length>=1){
+			if (_name in _schemes) return _schemes[_name];
+			arr.pop();
+			 _name = arr.join("-");
+		}
+		return "";
+	}
+	return {
+		magicNumber : 1.02,
+		polygon : CubePolygon,
+		baseRect : BaseRect,
+		sideRect : SideRect,
+		getSchemeByName : function(segIdx, name){
+			return getSchemeByName(scheme, name);
+		},
+		getHoverSchemeByName : function(name){
+			return getSchemeByName(hoverScheme, name);
+		}
+	};
+}
+var greenSchemes = new PolygonSchemes({
+	top : getCubeImageUrl("cube-green-top"),
+	bot : getCubeImageUrl("cube-green-bot"),
+	side : getCubeImageUrl("cube-green-side")
+},{
+	top : getCubeImageUrl("cube-green-top-hover"),
+	bot : getCubeImageUrl("cube-green-bot-hover"),
+	side : getCubeImageUrl("cube-green-side-hover")
+});
+var greenSchemes2 = new PolygonSchemes({
+	top : getCubeImageUrl("cube-blue-top"),
+	bot : getCubeImageUrl("cube-blue-bot"),
+	side : getCubeImageUrl("cube-blue-side")
+},{
+	top : getCubeImageUrl("cube-green-top-hover"),
+	bot : getCubeImageUrl("cube-green-bot-hover"),
+	side : getCubeImageUrl("cube-green-side-hover")
+});
+
+function graphClz(svg){
+	function drawAVG(rect,dataObj){
+		var avgEl = svg.append("g").classed("avg",true);
+		avgEl.append("line").attr({
+			x1: 0,
+			y1: rect[3]/2-30,
+			x2: rect[2],
+			y2: rect[3]/2-30,
+			"stroke-dasharray" : "20 20",
+			stroke: "rgba(19,230,255,.5)",
+			"stroke-width" : "2"
+		});
+		avgEl.append("circle").classed("capLeft",true)
+			.attr({
+				cx: 4,
+				cy: rect[3]/2-30,
+				r: 4,
+				fill: "rgba(19,230,255,1)"
+			});
+		avgEl.append("path")
+			.classed("capRight",true)
+			.attr("d",function(){
+				return "M 0,0 L 16,6 L 0,12 A 7.460922530479977 7.460922530479977,0 0,0,0 0 Z";
+			})
+			.attr("fill","rgba(19,230,255,1)")
+			.attr("transform",function(){
+				var x = rect[2]-20,
+					y = rect[3]/2-36;
+				return "translate("+x+","+y+")";
+			});
+		avgEl.append("text")
+			.text(dataObj.avg)
+			.attr({
+				x: rect[2],
+				y: rect[3]/2 - 24,
+				fill: "rgba(19,230,255,1)",
+				"font-size": 16
+			});
+	}
+	function drawCubes(rect,data,dataObj,tabName){
+		var perWidth = rect[2] / data.length ;
+		var perCubeWidth = perWidth - 30,
+			perHalfWidth = perWidth / 2;
+		var maxH = rect[3]-20;
+		var max = dataObj.max;
+
+		var cubes = svg.selectAll(".cube").data(data);
+		var newCubes = cubes.enter().append("g").attr("class", "cube");
+
+		cubes.each(function(d, idx){
+			var gEl = d3.select(this);
+			var x = perWidth * idx ;
+			var value = d.online + d.offline;
+			var valueText = nsLib.changeNumSegWithComma(value);
+			var h0 = (max - value) * (maxH - 30) / max; 
+			var scheme = tabName == "camera" ? greenSchemes : greenSchemes2;
+			var cube = new nsD3.createImgFrustum(gEl, [x + 20, -30, perCubeWidth, maxH], {
+				schemes: scheme,
+				disableDefaultHover: true,
+				max: max,
+				value: value
+			});
+			var tipOption = {
+				clz: 'device-tooltip',
+				total: valueText,
+				list:[
+					{text:"在线：",num: nsLib.changeNumSegWithComma(d.online)},
+					{text:"离线：",num: nsLib.changeNumSegWithComma(d.offline)}
+				]
+			};
+			gEl.append("text").attr("class", "name")
+					.attr("x", x + perHalfWidth + 6)
+					.attr("y", maxH)
+					.attr("fill","#fff")
+					.attr("font-size", 13)
+					.text(d.name);
+			gEl.append("text").attr("class","number")
+					.attr("x", x + perHalfWidth + 6)
+					.attr("y", h0 - 40)
+					.attr("opacity", 0)
+					.attr("fill","#09ba98")
+					.attr("font-size",16)
+					.attr("font-family","微软雅黑")
+					.text(valueText);		
+			
+			cube.hover(function(el){
+				var cubeEl = d3.select(el);
+				cubeEl.selectAll("image").each(function(d){
+					d3.select(this).attr("xlink:href", scheme.getHoverSchemeByName(d.clz));
+				});
+				d3.select(el.parentNode).select(".number").attr("opacity", 0);
+				nsLib.showToolTips(gEl.node(), {
+					left: 0, top: -45, width:120, height:80
+				}, tipOption);
+
+			},function(el){
+				var cubeEl = d3.select(el);
+				cubeEl.selectAll("image").each(function(d){
+					d3.select(this).attr("xlink:href", scheme.getSchemeByName(0, d.clz));
+				});
+				d3.select(el.parentNode).select(".number").attr("opacity", 1);
+				nsLib.hideToolTips();
+			});
+		});
+
+		setTimeout(function(){
+			cubes.selectAll(".number").attr("opacity", 1);
+			d3.select(".avg-num").classed("hidden",false);
+		},2100);
+	}
+	function refresh(rect,data,dataObj,tabName){
+		svg.selectAll("g").remove();
+		drawAVG(rect,dataObj); 		//平均线
+		drawCubes(rect,data,dataObj,tabName); 	//柱形图
+		jQuery(contentEl).parent(".device-list")
+			.find(".avg-num").html(nsLib.changeNumSegWithComma(dataObj.avg));
+	}
+	return {
+		resize : function(visibleW, visibleH){
+			
+		},
+		refresh: refresh,
+		scale : function(r){}
+	};
+}
+
+function getData(arr){
+	var data = IX.map(arr,function(item){
+		return item.online+item.offline;
+	});
+	return {
+		max: Math.ceil(Math.max.apply(null,data)*1.3),
+		avg: eval(data.join("+"))
+	};
+}
+var contentEl = null, graph = null, rect = null;
+nsPanel.DeviceList = function(container,cfg){
+	
+	return  {
+		getTabs: function(){ 
+			return [
+				{value:"camera", name: "各区摄像机建设", focused: "focused"},
+				{value:"iod", name: "各区卡口建设",focused: ""},
+			]; 
+		},
+		getHTML : function(){ return ""; },
+		switchTab :function(tabName){
+			nsGlobal.serviceCaller("getDeviceList", {type:tabName}, function(data){
+				var dataObj = getData(data);
+				graph.refresh(rect,data, dataObj,tabName);
+				d3.select(container).select(".avg-num")
+						.html(nsLib.changeNumSegWithComma(dataObj.avg));
+			});
+		},
+		refresh: function(data){
+			var dataObj = getData(data);
+			var wrapperEl = $XH.first(container,cfg.name);
+
+			d3.select(wrapperEl).append("div").attr("class","avg-num")
+				.html(nsLib.changeNumSegWithComma(dataObj.avg))
+				.classed("hidden",true);
+			
+			contentEl = $XH.first(wrapperEl,"content");
+			rect = $XH.getPosition(contentEl);
+			
+			if (!graph)
+				graph = new nsD3.AreaWrapper(contentEl,graphClz,rect[2],rect[3]);
+			graph.refresh(rect,data,dataObj,"camera");
+		}
+	};
+};
+</script>

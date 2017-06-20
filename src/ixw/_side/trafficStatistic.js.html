@@ -1,0 +1,130 @@
+<script>
+var nsGlobal = IXW.ns("Global");
+var nsPanel = IXW.ns("Panel");
+var nsLib = IXW.ns("Lib");
+var globalActionConfig = IXW.Actions.configActions;
+</script>
+<tpl id="trafficStatistic">
+	<div class="types">{typeList}</div>
+	<div class="filters">
+		<div class="dates r"><tpl id="dates">
+			<a data-href="$nv.statistic.date.click" class="{focused}" data-key="{name}">{text}</a>
+		</tpl></div>
+	</div>
+</tpl>
+
+<tpl id="typeList">
+	<ul class="clearfix"><tpl id="list">
+		<li class="l">
+			<div class="desc">
+				<span class="name">{text}</span>
+				<span class="num">{num}</span>
+			</div>
+			<div class="wrapper">
+				<div class="stage">
+					<ul id="img-list"><tpl id="urls">
+						<li style="background-image:url({url});"></li>
+					</tpl></ul>
+				</div>
+			</div>
+		</li></tpl>
+</ul></tpl>
+
+<script>
+var module = null,
+	interval = 20000,
+	paramsTime = 'hour';
+var dates = [
+	{name:"hour",text:"最近24小时",focused:"focused"},
+	{name:"week",text:"最近一周",focused:""},
+	{name:"month",text:"最近一月",focused:""},
+];
+var carTypes = [
+	{name: "emphasis", text: "重点车辆"},
+	{name: "deck", text: "套牌车辆"},
+	{name: "nocturnal", text: "昼伏夜出"}
+];
+
+globalActionConfig([["nv.statistic.date.click", function(params, el){
+	paramsTime = params.key;
+	jQuery(el).addClass("focused").siblings().removeClass("focused");
+	module.refresh({from:new Date(),type: paramsTime});
+}]]);
+
+function autoPlay(oStageEl){
+	if(oStageEl.timer){
+		clearInterval(oStageEl.timer);
+	}
+	var w = oStageEl.width(),h = oStageEl.height();
+	var oUl = oStageEl.children("ul");
+		oUl.append(oUl.children("li").first().clone());
+	var aLis = oUl.children("li");
+	var len = aLis.size();	
+	oUl.css("height",h*len);
+		
+	oStageEl.nIndex = 0;
+	oStageEl.timer = setInterval(function(){
+		oStageEl.nIndex++;
+		if(oStageEl.nIndex == len){
+			oUl.css("top",-h*1);
+			oStageEl.nIndex = 1;
+		}else{
+			oUl.animate({top:-h*oStageEl.nIndex});
+		}
+	},1500);
+}
+function Module(contentEl){
+	var wrapperEl = contentEl.find(".types");
+	function refresh(params){
+		nsGlobal.serviceCaller("getCarList", params, function(data){
+			var list = IX.map(carTypes,function(item){
+				var d = data[item.name];
+				return {
+					text: item.text,
+					num: d.num,
+					urls: d.urls
+				};
+			});
+			wrapperEl.html(t_typeList.renderData("",{list:list}));
+			wrapperEl.find(".stage").each(function(idx,el){
+				if(jQuery(el).find("li").length>=2){
+					autoPlay(jQuery(el));
+				}
+			});
+		});
+	}
+	return {
+		refresh: refresh
+	};
+}
+
+nsPanel.TrafficStatistic = function(container,cfg){
+	return  {
+		getTabs: function(){ return []; },
+		getHTML: function(){ 
+			var list = IX.map(carTypes,function(item){
+				return {
+					text: item.text,
+					num: 0,
+					urls: []
+				};
+			});
+			return t_trafficStatistic.renderData("",{
+				typeList: t_typeList.renderData("",{list:list}),
+				dates: dates
+			});
+		},
+		switchTab :function(tabName){ },
+		refresh: function(){
+			var contentEl = jQuery(container).find("."+cfg.name).find(".content"); 
+			module = new Module(contentEl);
+			
+			module.refresh({from:new Date(),type:paramsTime});
+			
+			setInterval(function(){
+				module.refresh({from:new Date(),type:paramsTime});
+			}, interval);
+		}
+	};
+};
+</script>

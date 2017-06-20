@@ -1,0 +1,142 @@
+<tpl id="outside">
+	<div class="cont-left l"></div>
+	<div class="cont-right r cmap"></div>
+</tpl>
+<script>
+var nsGlobal = IXW.ns("Global");
+var nsD3 = IXW.ns('D3');
+var nsLib = IXW.ns("Lib");
+var nsPanel = IXW.ns("Panel");
+var baseOptions = {
+	maxRadius: 46,
+	arc: {
+		r:32,strokeWidth:10,strokeLinecap:"square"
+	},
+	text:{
+		num: {
+			fontSize: 18,
+			fontFamilty: "Impact Regular",
+			offsetX: -20,
+			offsetY: 8,
+			fontWeight: "bold",
+			fill: "#56e1ed"
+		},
+		desc:{
+			fontSize: 18,
+			fontFamilty: "微软雅黑",
+			offsetX: -34,
+			offsetY: 80,
+			fontWeight: "bold",
+			fill:"#56e1ed",
+		}
+	}
+};
+var cfgs = {
+	province: {
+		name: '外省占比',
+		margin: [75,25], //top,left
+		bgRadius: [
+			{r:46,fill:"#1d283f",stroke:"#56e1ed",strokeWidth:1},
+			{r:38,fill:"#1d283f",stroke:"#273148",strokeWidth:8},
+			{r:30,fill:"#1d283f",stroke:"#56e1ed",strokeWidth:2}
+		],
+		arc:{
+			stroke:"#ffca4c"
+		},
+		text:{
+			num: {
+				fill: "#56e1ed"
+			},
+			desc:{
+				fill:"#56e1ed",
+				underline:{
+					width: 100,
+					height: 3,
+					fill: "#56e1ed",
+					offsetX: -46,
+					offsetY: 90
+				}
+			}
+		}
+	},
+	city:{
+		name: '外市占比',
+		margin: [75,150],
+		bgRadius: [
+			{r:46,fill:"#1d283f",stroke:"#7e62f7",strokeWidth:1},
+			{r:38,fill:"#1d283f",stroke:"#273148",strokeWidth:8},
+			{r:30,fill:"#1d283f",stroke:"#7e62f7",strokeWidth:2}
+		],
+		arc:{
+			stroke:"#ff4d77"
+		},
+		text:{
+			num: {
+				fill: "#7e62f7"
+			},
+			desc:{
+				fill:"#7e62f7",
+				underline:{
+					width: 100,
+					height: 3,
+					fill: "#7e62f7",
+					offsetX: -46,
+					offsetY: 90
+				}
+			}
+		}
+	}
+};
+function refreshOutside(contentEl,data){
+	var svg = d3.select(contentEl).append("svg")
+				  .attr({width:"100%",height:"100%"});
+	for(var key in data){
+		if(key != "total"){
+			var opts = jQuery.extend(true,{},baseOptions,cfgs[key]);
+			nsD3.showPieGraph(svg,opts,data[key]);
+		}else{
+			var totalText = svg.append("g")
+				.attr("transform","translate(40,30)")
+				.attr("class","total")
+				.append("text");
+			totalText.append("tspan")
+				.text("外地车辆总量")
+				.style("fill","#fff")
+				.style("font-family","微软雅黑")
+				.style("font-size",18);
+			totalText.append("tspan")
+				.text(nsLib.changeNumSegWithComma(data.total))
+				.attr("dx",10)
+				.attr("dy",3)
+				.style("fill","#fff")
+				.style("font-family","Impact Regular")
+				.style("font-size",24);
+		}
+	}
+}
+nsPanel.TrafficOutside = function(container,cfg){
+	var leftEl = null;
+	return  {
+		getTabs: function(){
+			return [
+				{value:"outside", name: "外地车辆统计", focused: "focused"}, 
+			]; 
+		},
+		getHTML : function(){ 
+			return t_outside.renderData(""); 
+		},
+		switchTab :function(tabName){ },
+		refresh: function(){
+			if (!leftEl){
+				var contentEl = $XH.first($XH.first(container,cfg.name),"content");
+				leftEl = $XH.first(contentEl,"cont-left");
+				nsPanel.showMapInfo($XH.first(contentEl,"cont-right"));
+			}
+
+			nsGlobal.serviceCaller("getOutCar", {}, function(data){
+				refreshOutside(leftEl,data);
+			});
+		}
+	};
+};
+</script>

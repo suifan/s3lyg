@@ -1,0 +1,61 @@
+<tpl id="videoPlayer">
+	<div class="title">
+		<span id="videoPlayer-title">{title}</span>
+		<a data-href="$videoPlayer.close" class="icon-close"></a>
+		<a data-href="$videoPlayer.maximize" class="icon-maximize"></a>
+	</div>
+	<div class="video">{frameHTML}</div>	
+</tpl>
+<script>
+var nsGlobal = IXW.ns('Global');
+var iframeId = "videoPlayer-frame";
+var container = null;
+var inused = false;
+
+function stopPlayer(){
+	var iframe = $X(iframeId);
+	if (!iframe) return;
+	IXW.postMessage(iframe.contentWindow, "stop");
+	$XH.addClass(container, "hide");
+}
+
+IXW.subscribe("playVideo", function(camera){
+	var iframe = $X(iframeId);
+	if (!inused || !iframe)
+		return;
+	IXW.postMessage(iframe.contentWindow, "play", camera.id);
+	$X("videoPlayer-title").innerHTML = camera.name;
+	$XH.removeClass(container, "hide");
+});
+
+IXW.subscribe("switchZone", function(zoneId){
+	stopPlayer();
+});
+
+IXW.Actions.configActions([["videoPlayer.maximize", function(params, el){
+	var dialogEl = $XH.ancestor(el, "dialog");
+	if (!dialogEl)
+		return;
+	$XH[$XH.hasClass(dialogEl, "maximized") ? "removeClass" : "addClass"](dialogEl, "maximized");
+
+}], ["videoPlayer.close", function(){
+	stopPlayer();
+
+}]]);
+
+var nsLib = IXW.ns("Lib");
+nsLib.initPlayer = function(){
+	if (!container) {
+		container = IX.createDiv("videoPlayer", "dialog video-player hide");
+		container.innerHTML = t_videoPlayer.renderData("", {
+			title: "",
+			frameHTML: nsLib.getIFrameHTML(iframeId, nsGlobal.getPVAVideoUrl(""))
+		});
+	}
+	inused = true;
+};
+nsLib.stopPlayer = function(){
+	stopPlayer();
+	inused = false;
+};
+</script>

@@ -1,0 +1,189 @@
+<script>
+var nsLib = IXW.ns("Lib");
+var doTransition = nsLib.doTransition;
+
+</script>
+<tpl id="digits">
+	<div><tpl id="items">
+		<span class="pic-digit idx{idx}" style="margin-top:{top}px;"></span>
+	</tpl></div>
+</tpl>
+<script>
+var DigitHeight = 52;
+var TotalHeight = DigitHeight * 10;
+var Interval = 50, Times = 29; // times 最好是质数
+function doRoll(items) {
+	function resetItems(posFn){
+		IX.iterate(items, function(item){
+			item.el.style.marginTop = posFn(item) + "px";
+		});
+	}
+	doTransition(Interval, Times, function(times){
+		resetItems(function(item){
+			var newpos =  (item.spos - Math.floor(item.step * times )) % TotalHeight;
+			newpos = newpos > 0 ? (newpos - TotalHeight) : newpos;
+			//console.log("marginTop: ", item , times, newpos);
+			return  newpos;
+		});
+	}, function(){
+		resetItems(function(item){ return item.epos; });
+	});
+}
+function Digits(_el, num){
+	var el = null ;
+	var items = IX.Array.init(num, 0);
+	var str = items.join("");
+
+	function createRollItem(idx, delta, oldV, newV){
+		return {
+			el: $XH.first(el, "idx" +idx),
+			spos: 0 - oldV * DigitHeight,
+			epos: 0 - newV * DigitHeight,
+			step: (delta % Times === 0 ? (Times + 2 * idx) : delta) * DigitHeight / Times
+		};
+	}
+	function refresh(value){
+		var rollDigits = [], min = num;
+		var delta = 0, v = 0;
+		var newItems = (str + value);
+		newItems = newItems.substring(newItems.length - num).split("");
+	
+		for (var i = 0; i < num; i++ ){
+			v = newItems[i] - 0;
+			if (items[i] == v && i < min)
+				continue;
+			delta = delta * 10 + v - items[i];
+			rollDigits.push(createRollItem(i, delta, items[i], v));
+			items[i] = v;
+			min = Math.min(i, min);
+		}
+		doRoll(rollDigits);
+	}
+
+	_el.innerHTML = t_digits.renderData("", {
+		items : IX.map(items, function(item, idx){
+			return { top: item };
+		})
+	});
+	el = $XD.first(_el, "div");
+
+	return { refresh: refresh };
+}
+</script>
+<tpl id="imgs">
+	<div class="slider"><tpl id="imgs">
+		<a id="pic-{type}-{id}" data-href="{href}" data-key="{id}" data-type="{type}">
+			<img src="{url}" />
+		</a>
+	</tpl></div>
+</tpl>
+<script>
+
+var ReplaceInterval = 100, ReplaceTimes = 23;
+function transit4Catched(slideEl, items, numOfVisible){
+	var imgIdx = 0;
+	var speed = items.length / ReplaceTimes;
+	var aEls = [];
+	var i = 0, type = items[0].type;
+
+	if (!$X('pic-' + type + "-0" )) {
+		for (i=0; i<numOfVisible; i++)
+			aEls.push(t_imgs.renderData("imgs", {
+				id: i,
+				type: type,
+				href: "",
+				pos:"",
+				url: ""
+			}));
+		slideEl.innerHTML = aEls.join("");
+	}
+	for (i=0; i<numOfVisible; i++)
+		aEls[i] = $X('pic-' + type + "-" + i);
+
+	function showImg(idx){
+		var item = items[idx];
+		var nidx = idx % numOfVisible;
+		var imgEl = $XD.first(aEls[nidx], "img");
+		imgEl.src = item.url;
+	}
+	function showImgs(lastIdx){
+		for (var i = Math.max(imgIdx, lastIdx - numOfVisible); i < lastIdx; i++)
+			showImg(i);
+	}
+	showImg(0);
+	imgIdx = 1;
+	doTransition(ReplaceInterval, ReplaceTimes, function(times){
+		var _idx = Math.floor(speed * times);
+		showImgs(_idx);
+		imgIdx = _idx;
+	}, function(){
+		showImgs(items.length);
+	});
+}
+
+var SlideInterval = 60, SlideTimes = 13;
+function transit4Matched(slideEl, items, numOfVisible, unitWidth){
+	var totalWidth = items.length * unitWidth;
+	var speed = totalWidth / SlideInterval;
+	slideEl.innerHTML = IX.map(items, function(item){
+		return t_imgs.renderData("imgs", item);
+	}).join("") + slideEl.innerHTML;
+	slideEl.style.marginLeft = 0 - totalWidth + "px";
+
+	doTransition(SlideTimes, SlideInterval, function(times){
+		slideEl.style.marginLeft = Math.floor(speed * times) - totalWidth + "px";
+	}, function(){
+		slideEl.style.marginLeft = 0;
+
+		var aEl = $XD.first(slideEl, "a");
+		var n = 1;
+		while(aEl){
+			var el = $XD.next(aEl, "a");
+			if (!el)
+				break;
+			n ++;
+			if (n <= numOfVisible)
+				aEl = el;
+			else
+				el.parentNode.removeChild(el);
+		}
+	});
+}
+
+function ImgSlider(el, type, numOfVisible){
+	var isMatched = type.indexOf("matched") >= 0;
+	var unitWidth = isMatched ? (type.indexOf("car") >= 0 ? 132 : 79) : 0;
+	var slideEl = null;
+
+	function refresh(items){
+		var _items = isMatched ? IX.loop(items, [], function(acc, item){
+			if (!$X('pic-' + type + '-' + item.id))
+				acc.push(item);
+			return acc;
+		}) : items;
+		if (_items.length === 0)
+			return;
+
+		(isMatched ? transit4Matched : transit4Catched)(slideEl, IX.map(_items, function(item, idx){
+			return IX.inherit(item, {
+				type: type
+			}, isMatched ? {
+				pos: [item.lon, item.lat].join()
+			} : {
+				id : idx,
+				pos: ""
+			});
+		}), numOfVisible, unitWidth);
+	}
+
+	el.innerHTML = t_imgs.renderData("", {
+		imgs : []
+	});
+	slideEl = $XH.first(el, "slider");
+
+	return { refresh: refresh };
+}
+
+nsLib.Digits = Digits;
+nsLib.ImgSlider = ImgSlider;
+</script>

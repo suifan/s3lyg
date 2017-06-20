@@ -1,0 +1,42 @@
+<tpl id="statistic">
+	<div class="tit">设备总量</div>
+	<div class="cont">
+		<div class="total">
+			<span class="text-shadow">{total}</span>
+			<span>{total}</span>
+		</div>
+		<div class="classify">
+			<span>
+				<span class="name">摄像机</span>
+				<span class="num">{camera}</span>
+			</span>
+			<i class="sep"></i>
+			<span>
+				<span class="name">卡口</span>
+				<span class="num">{iod}</span>
+			</span>
+		</div>
+	</div>
+</tpl>
+<script>
+var nsPanel = IXW.ns("Panel");
+var nsLib = IXW.ns("Lib");
+nsPanel.DeviceStatistic = function(container,cfg){
+	return  {
+		getTabs: function(){ return []; },
+		getHTML : function(){ 
+			return t_statistic.renderData("",{
+				total:0,
+				iod:0,
+				camera:0
+			});
+		},
+		switchTab :function(tabName){ },
+		refresh: function(data){
+			IX.extend(data,{total: nsLib.changeNumSegWithComma(data.total)});
+			jQuery(container).find(".device-statistic")
+				.html(t_statistic.renderData("",data));
+		}
+	};
+};
+</script>

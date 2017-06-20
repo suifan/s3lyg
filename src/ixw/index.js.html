@@ -1,0 +1,68 @@
+<script>
+var ixwPages = IXW.Pages;
+var ixwSession = IXW.Session;
+var nsGlobal = IXW.ns("Global");
+var nsD3 = IXW.LibD3;
+var ifLoaded = false;
+function loadEffects(){
+	if(ifLoaded) return;
+	ifLoaded = true;
+	// nsD3.loadDefs(nsGlobal.getSvgUrl("effects"));
+}
+</script>
+<tpl id="page">
+	<div id = "lside"></div>
+	<div id = "body"></div>
+	<div id = "rside"></div>
+</tpl>
+<script>
+ixwSession.config({
+	load: function(cbFn) {
+		nsGlobal.commonCaller("session", {}, cbFn);
+	},
+	onstart: function(data) {// optional :
+		//nsD3.restoreDefs();
+	}
+});
+
+var PagesConfiurations = IX.map([
+//{type?, name+, path?, bodyClz?, needAuth?},
+{name: "homePage", isDefault : true},
+{name: "sidePage"}
+], function(item){
+	var name = item.name;
+	var arr = name.split("-");
+	var moduleName = arr[0];
+	var subNS = item.type || moduleName.capitalize();
+
+	var _clz = [moduleName];
+	if (item.bodyClz) _clz.push(item.bodyClz);
+
+	return IX.inherit({
+		initiator : [IXW_NS, subNS, "init"].join("."),
+		path : arr.join("/"),
+
+		needAuth : true
+	}, item, {
+		bodyClz : _clz.join(" ")
+	});
+});
+
+ixwPages.configPages(PagesConfiurations, function(pageName, pageCfg){
+	return !$XP(pageCfg, "needAuth", true) || ixwSession.isValid();
+});
+
+var appInitialized = false;
+IXW.startup(function(){
+	if (appInitialized)
+		return;
+	appInitialized = true;
+	
+	document.body.innerHTML = t_page.renderData("",{});
+	ixwPages.listenOnClick(document.body);
+	ixwSession.load(function(){
+		ixwPages.start();
+	});
+	loadEffects();
+});
+</script>

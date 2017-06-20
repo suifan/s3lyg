@@ -1,0 +1,42 @@
+<tpl id="tooltips">
+	<div class="tooltips {clz}">
+		<ul class="tip">
+			<div class="total {hidden}">{total}</div>
+			<tpl id="tiplist">
+				<li>
+					<span class="txt">{text}</span>
+					<span>{num}</span>
+				</li>
+			</tpl>
+		</ul>
+		<div id="triangle" class="triangle"></div>
+	</div>
+</tpl>
+<script>
+var nsLib = IXW.ns("Lib");
+
+var _panel = new IXW.Lib.PopPanel({
+	id : "toolTips",
+	position : "offset"
+});
+/*
+	data:[{
+		text:...
+		num:...
+	},....}
+ */
+nsLib.showToolTips  = function(container, rect, data){
+	var bodyEl = _panel.getBodyContainer();
+	bodyEl.innerHTML = t_tooltips.renderData("",{
+		clz: data.clz,
+		total: data.total ? data.total : "",
+		hiddenL: data.total ? "hidden" : "",
+		tiplist: data.list
+	});
+	_panel.reset({
+		offset : rect,
+		trigger : container
+	});
+};
+nsLib.hideToolTips = function(){_panel.hide();};
+</script>

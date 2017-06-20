@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>LYG SIM Project</title>
+
+		<link href="../src/less/core.less" rel="stylesheet/less" type="text/css"/>
+<script type="text/javascript">
+ var IXW_BaseUrl = "http://localhost/netposa/s3lyg";
+// var IXW_BaseUrl = "http://zd.com/s3lyg";
+if ("IXWBaseUrl" in parent)
+	IXW_BaseUrl = parent.IXWBaseUrl;
+</script>
+		<!--  Less Compiler -->
+		<script>
+window.IXW_NS = "LYG";
+less = {
+	env: "development",
+	async: false,
+	fileAsync: false,
+	poll: 1000,
+	functions: {},
+//	dumpLineNumbers: "comments",
+	relativeUrls: false
+};
+		</script>
+		<script src="../src/lib/less.min.js"></script>
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+		<script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	</head>
+	<body>
+	</body>
+	<!-- Basic JS lib required for ets and common facilities -->
+	<script src="../src/lib/ix.js"></script>
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="../src/lib/jquery-2.1.1.js"></script>
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="../src/bootstrap/js/bootstrap.js"></script>
+
+	<script src="../src/lib/ixw.js"></script>
+	<script src="../src/lib/ixwui.js"></script>
+	<script src="../src/lib/ixwext.js"></script>
+	<script src="../src/lib/ext.js"></script>
+	<script src="../src/lib/d3.js"></script>
+	<script src="../src/lib/topojson.js"></script>
+	<script src="../src/libd3/defs.js"></script>
+	<script src="../src/libd3/wrapper.js"></script>
+	<script src="../src/libd3/bubbles.js"></script>
+	<script src="../src/libd3/frustums.js"></script>
+	<script src="../src/libd3/imgFrustums.js"></script>
+	<script src="../src/libd3/map.js"></script>
+
+	<!-- gloabl data here! -->
+	<script src="../sim/testSide.js"></script>
+	<script src="../sim/testHome.js"></script>
+	
+	<script src="global.js"></script>
+	<!-- global data above! -->
+
+	<!-- user-defined JS lib here! -->
+	<script src="../src/mapdata/map.js"></script>
+	<script src="../src/ixw/lib/transit.js"></script>
+	<script src="../src/ixw/_home/map.js"></script>
+	<script src="../src/ixw/_side/map.js"></script>
+
+	<script src="../src/ixw/lib/tools.js"></script>
+	<script src="../src/ixw/d3ext/charts.js"></script>
+	<script src="../src/ixw/d3ext/pieChart.js"></script>
+	<script src="../src/ixw/lib/trafficDataGraph_dataHandler.js"></script>
+	<script src="../src/ixw/lib/trafficDataGraph.js"></script>
+	
+	<link type="ets" href="../src/ixw/lib/tooltips.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/deviceStatistic.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/deviceList.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/deviceRank.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/trafficData.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/trafficOutside.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/trafficStatistic.js.html"></link>
+	<link type="ets" href="../src/ixw/lib/imgSlide.js.html"></link>
+	<link type="ets" href="../src/ixw/_side/index.js.html"></link>
+	<link type="ets" href="../src/ixw/_home/index.js.html"></link>
+
+	<link type="ets" href="../src/ixw/index.js.html"></link>
+	<!-- user-defined JS lib above! -->
+	<!-- JS Tpl mix parser -->
+	<script src="../src/lib/ets.js"></script>
+</html>

@@ -1,0 +1,97 @@
+<script>
+var nsGlobal = IXW.ns("Global");
+var nsPanel = IXW.ns("Panel");
+var nsD3 = IXW.ns('D3');
+var getPieFillUrl = nsGlobal.getPieFillUrl;
+var baseOptions = {
+	maxRadius: 120,
+	bgRadius: [
+		{r:108,fill:"#273148",stroke:""},
+		{r:90,fill:"#1d283f",stroke:""},
+		{r:82,fill:"rgba(0,0,0,0)",stroke:"#19ffb1"},
+		{r:66,fill:"#273148",stroke:""},
+	],
+	arc: {
+		r:86,strokeWidth:30,
+		stroke:"rgba(25,255,177,.6)",strokeLinecap:"round",
+	},
+	ball: {
+		r:90,strokeWidth:20,stroke:"#fff"
+	},
+	text: {
+		num:{
+			fontSize: 44,
+			// fontFamilty: "Impact Regular",
+			offsetX: -40,
+			offsetY: 0,
+			fontWeight: "bold",
+			fill:"#19ffb1"
+		},
+		desc:{
+			fontSize: 15,
+			fontFamilty: "微软雅黑",
+			offsetX: -36,
+			offsetY: 30,
+			fontWeight: "normal",
+			fill:"#19ffb1"
+		}
+	},
+	ranking: {
+		width:102,height:21,url: getPieFillUrl("arrow"),
+		fontSize:30,fontFamily: "Impact Regular",fill:"#f9c556"
+	}
+};
+function renderPattern(svg){
+	var patternEl = svg.append("defs")
+		.append("pattern")
+		.attr("id","fill-img")
+		.attr("width",300)
+		.attr("height",300);
+	patternEl.append("image")
+		.attr("xlink:href",getPieFillUrl("gradient"))
+		.attr("x",0)
+		.attr("y",0)
+		.attr("width",300)
+		.attr("height",300);
+}
+
+
+nsPanel.DeviceRank = function(container,cfg){
+	return  {
+		getTabs: function(){
+			return [
+				{value:"province-rank", name: "省厅排名", focused: "focused"}, 
+			]; 
+		},
+		getHTML : function(){ return ""; },
+		switchTab :function(tabName){ },
+		refresh: function(panelData){
+			var contentEl = $XH.first($XH.first(container,cfg.name),"content");
+
+			var svg = d3.select(contentEl).append("svg")
+						  .attr({width:"100%",height:"100%"});
+			renderPattern(svg);  //渲染patterns
+			var cfgs = {
+				iod: {
+					name: '卡口完好率',
+					margin: [36,50],
+					ranking: {
+						offsetX:80,offsetY: -110
+					}
+				},
+				video:{
+					name: '视频完好率',
+					margin: [36,370],
+					ranking: {
+						offsetX:80,offsetY: -110
+					}
+				}
+			};
+			for(var key in panelData){
+				var opts = jQuery.extend(true,{},baseOptions,cfgs[key]);
+				nsD3.showPieGraph(svg,opts,panelData[key]);
+			}
+		}
+	};
+};
+</script>

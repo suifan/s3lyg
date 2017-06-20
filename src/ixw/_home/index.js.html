@@ -1,0 +1,369 @@
+<script>
+var nsGlobal = IXW.ns("Global");
+var nsMapData= IXW.ns("MapData");
+var nsLib = IXW.ns("Lib");
+var nsD3 = IXW.ns("D3");
+
+var Timer = nsLib.Timer;
+
+var Digits = nsLib.Digits;
+var BaseImgSlider = nsLib.ImgSlider;
+
+</script>
+<tpl id="carPop">
+	<div class="type">{type}</div>
+	<div class="main">
+		<div class="title">
+			<span class="name l">{iod}</span>
+			<span class="time r">{time}</span>
+		</div>
+		<div class="content">
+			<ul class="img-list l"><tpl id="imgs">
+				<li class="l">
+					<img src="{url}" alt="" style="{style}">
+					<p class="name">{name}</p>
+				</li>
+			</tpl></ul>
+			<ul class="desc-list l"><tpl id="details">
+				<li>
+					<span >{text}：</span>
+					<span class="{key}">{value}</span>
+				</li>
+			</tpl>
+			</ul>
+			<div class="percent">{percent}%</div>
+		</div>
+	</div>
+	<a data-href="$pop.close.click" class="btn-close"></a>
+</tpl>
+<script>
+var AlarmPanelWidth = 390, AlaramPanelHeight = 210;
+
+var carItems = [
+	{key: "number",text:"车牌号码"},
+	{key: "level",text:"报警级别"},
+	{key: "status",text:"报警状态"},
+	{key: "site",text:"报警地点"}
+];
+var faceItems = [
+	{key:"name",text:"姓名"},
+	{key:"sex",text:"性别"},
+	{key:"database",text:"所在库"},
+	{key:"idCard",text:"证件号"}
+];
+function AlarmPanel(el){
+	function getPopTplData(type,data){
+		IX.extend(data,{percent: Math.round(data.percent)});
+		var fields = type == "car" ? carItems : faceItems; 
+		var details = IX.map(fields,function(item){
+			for(var key in data){
+				if(item.key == key){
+					IX.extend(item,{value:data[key]});
+					if(item.key == "status"){
+						IX.extend(item,{value:data[key] == "yes"? "有效": "无效" });
+					}
+					return item;
+				}
+			}
+		});
+		return IX.inherit(data,{
+			type: type == "car" ? "车辆布控报警" : "人脸比中",
+			imgs: IX.map(data.imgs,function(item){
+				return nsLib.handleImg(item,80,100);
+			}),
+			details: details
+		});
+	}
+	return {
+		show: function(item){
+			var x = item.xy[0], y = item.xy[1];
+			var isTop = true;
+			var left = x - AlarmPanelWidth / 2, 
+				top = y - AlaramPanelHeight - 30;
+
+			if (top < 0 ) {
+				top = y + 30;
+				isTop = false;
+			}
+			
+			el.style.left = left + "px";
+			el.style.top = top + "px";
+			$XH[isTop?"removeClass":"addClass"](el, "topPointer");
+			nsGlobal.serviceCaller("getDetailData", {id:item.id,type:item.type}, function(data){
+				jQuery(el).html(t_carPop.renderData("",getPopTplData(item.type,data)));
+				el.style.display = "block";
+			});
+			
+		},
+		hide: function(){
+			el.style.display = "none";
+		}
+	};
+}
+
+var CarRecordItems = [
+	{text: "今日新增通行记录总数", key: "today"},
+	{text: "车辆库", key: "lib"},
+	{text: "出租车总数", key: "taxi"},
+	{text: "二次识别图片数", key: "pics"},
+	{text: "套牌车数", key: "fake"}
+], FaceRecordItems = [
+	{text: "今日新增人脸数据总数", key: "today"},
+	{text: "重点人员库", key: "vip"},
+	{text: "人口库", key: "popular"},
+	{text: "全国在逃人员库", key: "escaped"},
+	{text: "人脸比对", key: "pics"}
+];
+
+function getDefaultItem(item){
+	return {
+		text: item.text,
+		value: 0
+	};
+}
+
+var dateStr = IX.Date.format(new Date()).split(" ");
+var DefaultPageData = {
+	date: dateStr[0],
+	time: dateStr[1],
+	total: 0,
+	today: 0,
+	online: 0,
+	bounds: [
+		{name: "province", text: "省域"},
+		{name: "region", text: "市域"},
+		{name: "city", text: "城域"},
+		{name: "kernel", text: "核心区域"}
+	],
+	carRecords: IX.map(CarRecordItems, getDefaultItem),
+	faceRecords: IX.map(FaceRecordItems, getDefaultItem)
+};
+</script>
+<tpl id="page">
+	<div class="hdr">
+		<span class="clock">
+			<span class="pic-clock"></span>
+			<span class="date">{date}</span>
+			<span class="time">{time}</span>
+		</span>
+		<span class="info">
+			总登录数：<b class="total">{total}</b>人，
+			今日登录数：<b class="today">{today}</b>人，
+			当前在线数：<b class="online">{online}</b>人
+		</span>
+	</div>	
+	<div class="map"></div>
+	<div class="map-mark"><tpl id="bounds">
+		<a data-href="$home.mapbound.click" data-key="{name}" class="{name}">
+			<span class="bound"></span><span name="text">{text}</span>
+		</a>
+	</tpl></div>
+	<div class="lbox">
+		<h6>车辆数据总量</h6>
+		<div class="box"></div>
+		<div class="records"><tpl id="carRecords"><div class="rec{idx}">
+			<span class="pic-item"></span>
+			<span class="text">{text}：</span>
+			<span class="value">{value}</span>
+			<span class="unit">条</span>
+		</div></tpl></div>
+		<div class="catched">
+			<div class="title">管控人员车辆</div>
+			<div class="imgs"></div>
+		</div>
+		<div class="matched">
+			<div class="title">车辆布控报警</div>
+			<div class="imgs"></div>
+		</div>
+	</div>
+	<div class="rbox">
+		<h6>人脸数据总量</h6>
+		<div class="box"></div>
+		<div class="records"><tpl id="faceRecords"><div class="rec{idx}">
+			<span class="pic-item"></span>
+			<span class="text">{text}：</span>
+			<span class="value">{value}</span>
+			<span class="unit">条</span>
+		</div></tpl></div>
+		<div class="catched">
+			<div class="title">人脸实时抓拍</div>
+			<div class="imgs"></div>
+		</div>
+		<div class="matched">
+			<div class="title">比中人脸</div>
+			<div class="imgs"></div>
+		</div>
+	</div>
+	<div class="pop"></div>
+</tpl>
+<script>
+var workTimer = new Timer(1000);
+var hdrInfo = null, carInfo = null, faceInfo = null;
+var mapInfo = null, alarmPanel = null;
+
+IXW.Actions.configActions([["home.mapbound.click", function(params, el){
+	if (mapInfo)
+		mapInfo.toggleBound(params.key);
+
+}],["home.img.click", function(params, el){ // refer imgSlider
+	if (mapInfo)
+		mapInfo.focus(params.key, $XD.dataAttr(el, "type"));
+}],["pop.close.click",function(params,el){
+	mapInfo.blur();
+	alarmPanel.hide();
+}]]);
+
+function HdrInfo(el){
+	var items = "total,today,online".split(",");
+	var clockEl = $XH.first(el, "clock");
+	var dtEl = IX.map(["date", "time"], function(name){
+		return $XH.first(clockEl, name);
+	});
+	var infoEl = $XH.first(el, "info");
+	var itemsEl = IX.map(items, function(name){
+		return $XH.first(infoEl, name);
+	});
+
+	function refresh(userInfo){
+		IX.iterate(items, function(name, idx){
+			itemsEl[idx].innerHTML = userInfo[name];
+		});	
+	}
+
+	workTimer.register(function(){
+		IX.iterate(IX.Date.format(new Date()).split(" "), function(item, idx){
+			if (item == dateStr[idx])
+				return;
+			dtEl[idx].innerHTML = item;
+			dateStr[idx] = item;
+		});
+	});
+
+	return {
+		refresh: refresh
+	};
+}
+
+function CarImgSlider(el, type){
+	return new BaseImgSlider(el, "car-" + type, 3);
+}
+function FaceImgSlider(el, type){
+	return new BaseImgSlider(el, "face-" + type, 5);
+}
+
+function ItemsInfo(el, items, imgClz){
+	var digits = new Digits($XH.first(el, "box"), 11);
+	var recordsEl = $XH.first(el, "records");
+	var valueEls = IX.map(items, function(item, idx){
+		return $XH.first($XH.first(recordsEl, "rec" + idx), "value");
+	});
+
+	var catched = new imgClz($XH.first($XH.first(el, "catched"), "imgs"), "catched");
+	var matched = new imgClz($XH.first($XH.first(el, "matched"), "imgs"), "matched");
+
+	function splitBillion(str){
+		var after = str;
+		var billion = "";
+		var n = str.length - 8;
+		if (n > 0){
+			after = str.substring(n);
+			billion = str.substring(0, n);
+		}
+		return '<i class="billion">'+billion+'</i>'+after;
+	}
+
+	function refresh(info){
+		digits.refresh(info.total);
+
+		IX.iterate(items, function(item, idx){
+			valueEls[idx].innerHTML = splitBillion(""+info[item.key]);
+		});
+	}
+	function refreshImgs(catchedItems, matchedItems){
+		catched.refresh(catchedItems);
+		matched.refresh(IX.map(matchedItems, function(item){
+			return IX.inherit(item, {
+				href: "$home.img.click"
+			});
+		}));
+	}
+
+	return {
+		refresh: refresh,
+		refreshImgs: refreshImgs
+	};
+}
+
+var nsModule = IXW.ns("Homepage");
+nsModule.init = function(pageCfg, pageParams, cbFn){
+	var bodyEl = $X('body');
+	var prevTS = 0;
+
+	workTimer.clear();
+	bodyEl.innerHTML = t_page.renderData("", DefaultPageData);
+	hdrInfo = new HdrInfo($XH.first(bodyEl, "hdr"));
+	carInfo = new ItemsInfo($XH.first(bodyEl, "lbox"), CarRecordItems, CarImgSlider);
+	faceInfo = new ItemsInfo($XH.first(bodyEl, "rbox"), FaceRecordItems, FaceImgSlider);
+	alarmPanel = new AlarmPanel($XH.first(bodyEl, "pop"));
+	mapInfo = nsModule.showMapInfo($XH.first(bodyEl, "map"));
+
+	mapInfo.onfocus(function(item){
+		alarmPanel.show(item);
+	});
+
+	var infoCallers = [
+		{target: hdrInfo, name: "getBasicData4User"},
+		{target: faceInfo, name: "getBasicData4Face"},
+		{target: carInfo, name: "getBasicData4Car"}
+	];
+	function refreshInfo(){
+		IX.iterate(infoCallers, function(caller){
+			nsGlobal.serviceCaller(caller.name, {}, function(data){
+				caller.target.refresh(data);
+			});
+		});
+	}
+
+	var carCached = { captured: null, matched: null }, 
+		faceCached = { captured: null, matched: null };
+	var imgCallers = IX.map([
+		{category: "car", type:"captured"}, //name:"getCarCaptured", 
+		{category: "car", type:"matched"}, //name:"getCarMatched", 
+		{category: "face", type:"captured"}, //name:"getFaceCaptured", 
+		{category: "face", type:"matched"} //name:"getFaceMatched", 
+	], function(item){
+		var category = item.category, type = item.type;
+		return {
+			name: ["get", category, type].join("-").camelize(),
+			cache : category=="car" ? carCached : faceCached,
+			type: type,
+			target : category=="car" ? carInfo : faceInfo
+		};
+	});
+
+	function refreshImgs(){
+		IX.iterate(imgCallers, function(caller){
+			caller.cache[caller.type] = null;
+		});
+		IX.iterate(imgCallers, function(caller){
+			nsGlobal.serviceCaller(caller.name, {}, function(data){
+				var cache = caller.cache;
+				cache[caller.type] = data;
+				if (cache.captured && cache.matched)
+					caller.target.refreshImgs(cache.captured, cache.matched);
+				if (faceCached.matched && carCached.matched)
+					mapInfo.refresh(carCached.matched, faceCached.matched);
+			});
+		});
+	}
+	//refreshImgs();
+	workTimer.register(function(ticks){
+		if (ticks - prevTS < 5000 ) return;
+		prevTS = ticks;
+
+		refreshInfo();
+		refreshImgs();
+	});
+	workTimer.start();
+};
+</script>

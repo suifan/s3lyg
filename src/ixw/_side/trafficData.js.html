@@ -1,0 +1,55 @@
+ <script>
+var globalActionConfig = IXW.Actions.configActions;
+var nsLib = IXW.ns("Lib");
+var nsGlobal = IXW.ns("Global");
+var dates = [
+	{name:"hour",text:"最近24小时",focused:"focused"},
+	{name:"week",text:"最近一周",focused:""},
+	{name:"month",text:"最近一月",focused:""},
+];
+</script>
+<tpl id="trafficData">
+	<div class="filters">
+		<div class="dates r"><tpl id="dates">
+			<a data-href="$nv.data.date.click" class="{focused}" data-key="{name}">{text}</a>
+		</tpl></div>
+	</div>
+	<div class="graph"></div>
+</tpl>
+<script>
+var graphContainer = null;
+function _refresh(key){
+	var from = new Date();
+	var type = key ? key : 'hour';
+	var graph = nsLib.trafficGraph(graphContainer);
+	nsGlobal.serviceCaller("trafficData", {
+		from: from,
+		type: type
+	}, function(data){
+		graph.refresh(type,data);
+	});
+}
+globalActionConfig([["nv.data.date.click", function(params, el){
+	jQuery(el).addClass("focused")
+			  .siblings().removeClass("focused");
+	_refresh(params.key);
+}]]);
+var nsPanel = IXW.ns("Panel");
+nsPanel.TrafficData = function(container,cfg){
+	return  {
+		getTabs: function(){
+			return [
+				{value:"traffic-data", name: "车辆通行统计", focused: "focused"}, 
+			];
+		},
+		getHTML : function(){
+			return t_trafficData.renderData("",{dates: dates});
+		},
+		switchTab :function(tabName){ },
+		refresh: function(){
+			graphContainer = jQuery(container).find("."+cfg.name + " .graph").get(0);
+			_refresh();
+		}
+	};
+};
+</script>
